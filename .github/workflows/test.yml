@@ -18,3 +18,69 @@ jobs:
         run: |
           chmod +x run-test.sh
           ./run-test.sh
+
+  # Time to create and close the driver across different versions, with the dynamic grid configuration.
+  # Spins-up the grid and runs a simple test from java
+  # Results in the run outputs, also uploads videos and logs as artifacts
+  test-dynamic-grid:
+    defaults:
+      run:
+        working-directory: .
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      - name: "Prepare folders and scripts"
+        run: |
+          mkdir -p target
+          chmod u+x ./test-grid/wait-container-ready.sh
+
+      - name: "Dynamic grid nightly"
+        run: |
+          mkdir -p target/dynamic-grid-video-nightly
+          sudo chown 1200:1201 target/dynamic-grid-video-nightly
+
+          docker compose -f test-grid/dynamic-grid-nightly.yml up -d --build --quiet-pull
+          ./test-grid/wait-container-ready.sh dynamic-grid "Started Selenium Standalone"
+          mvn test -U -ntp
+          
+          docker logs dynamic-grid > target/dynamic-grid-log-nightly.log
+          docker compose -f test-grid/dynamic-grid-nightly.yml down
+
+      - name: "Dynamic grid 20260202 (baseline: latest stable before event driven)"
+        run: |
+          mkdir -p target/dynamic-grid-video-20260202
+          sudo chown 1200:1201 target/dynamic-grid-video-20260202
+
+          docker compose -f test-grid/dynamic-grid-20260202.yml up -d --build --quiet-pull
+          ./test-grid/wait-container-ready.sh dynamic-grid "Started Selenium Standalone"
+          mvn test -U -ntp -Dtest=**/TestPerformance#testDynamicGrid
+
+          docker logs dynamic-grid > target/dynamic-grid-log-20260202.log
+          docker compose -f test-grid/dynamic-grid-20260202.yml down
+
+      - name: "Dynamic grid 20260404"
+        run: |
+          mkdir -p target/dynamic-grid-video-20260404
+          sudo chown 1200:1201 target/dynamic-grid-video-20260404
+
+          docker compose -f test-grid/dynamic-grid-20260404.yml up -d --build --quiet-pull
+          ./test-grid/wait-container-ready.sh dynamic-grid "Started Selenium Standalone"
+          mvn test -U -ntp
+          
+          docker logs dynamic-grid > target/dynamic-grid-log-20260404.log
+          docker compose -f test-grid/dynamic-grid-20260404.yml down
+
+      # results are in the run outputs, here upload the videos to check if they are right
+      - if: always()
+        name: Publish videos and logs
+        uses: actions/upload-artifact@v7
+        with:
+          name: "test-grid"
+          path: |
+            target/dynamic-grid-video-*/**/*
+            target/dynamic-grid-log-*.log

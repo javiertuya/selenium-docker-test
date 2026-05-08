@@ -1,6 +1,6 @@
-# selenium-test
+# selenium-docker-test
 
-Standalone project and scripts for performance and other selenium tests
+Standalone project and scripts for performance and other docker-selenium tests
 
 - `test-video-close`: Scripts to reproduce issue https://github.com/SeleniumHQ/docker-selenium/issues/3129
     - Run worflow `test-video-close`

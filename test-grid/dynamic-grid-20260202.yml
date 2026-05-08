@@ -1,0 +1,11 @@
+name: selenium-test-dynamic-grid
+services:
+  dynamic-grid:
+    image: selenium/standalone-docker:4.40.0-20260202
+    container_name: dynamic-grid
+    ports:
+      - ${PORTS:-4444:4444}
+    volumes:
+      - ${PWD}/target/dynamic-grid-video-20260202:/opt/selenium/assets
+      - ${PWD}/test-grid/config-20260202.toml:/opt/selenium/docker.toml
+      - /var/run/docker.sock:/var/run/docker.sock
