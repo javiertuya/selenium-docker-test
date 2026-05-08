@@ -1,0 +1,20 @@
+name: test-all
+on:
+  workflow_dispatch:
+  push:
+jobs:
+
+  # Time to stop the video container across different versions (standalone chrome with video recorder sidecar)
+  # To reproduce issue https://github.com/SeleniumHQ/docker-selenium/issues/3129
+  # Results in the run outputs
+  test-video-close:
+    defaults:
+      run:
+        working-directory: test-video-close
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run test video close
+        run: |
+          chmod +x run-test.sh
+          ./run-test.sh
