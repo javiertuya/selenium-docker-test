@@ -1,0 +1,51 @@
+# Customized file from docker-selenium doc
+# To execute this docker compose yml file use `docker compose -f docker-compose-v3-video.yml up`
+# Add the `-d` flag at the end for detached execution
+# To stop the execution, hit Ctrl+C, and then `docker compose -f docker-compose-v3-video.yml down`
+services:
+  chrome:
+    image: selenium/node-chrome:4.43.0-20260404
+    container_name: selenium-node-20260404
+    platform: linux/amd64
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+
+  chrome_video:
+    image: selenium/video:ffmpeg-8.1-20260404
+    container_name: selenium-video-20260404
+    user: root
+    volumes:
+      - ${FOLDER}:/videos
+    depends_on:
+      - chrome
+    environment:
+      - DISPLAY_CONTAINER_NAME=chrome
+      - SE_NODE_GRID_URL=http://selenium-hub:4444
+#      - FILE_NAME=chrome_video.mp4
+      - SE_VIDEO_FILE_NAME=auto
+      # Added to remove rclone upload (video will be copied after driver quit)
+      - SE_VIDEO_INTERNAL_UPLOAD=false
+      - SE_VIDEO_UPLOAD_ENABLED=false
+
+  selenium-hub:
+    image: selenium/hub:4.43.0-20260404
+    container_name: selenium-hub
+    ports:
+      #- "4442:4442"
+      #- "4443:4443"
+      - "4444:4444"
+
+  # File browser to manage the videos from local volume
+  #file_browser:
+  #  image: filebrowser/filebrowser:latest
+  #  container_name: file_browser
+  #  restart: always
+  #  ports:
+  #    - "8081:80"
+  #  volumes:
+  #    - ${FOLDER}:/srv
+  #  environment:
+  #    - FB_NOAUTH=true

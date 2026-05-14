@@ -1,0 +1,50 @@
+# Customized file from docker-selenium doc
+# To execute this docker compose yml file use `docker compose -f docker-compose-v3-video-upload-standalone.yml up`
+# Add the `-d` flag at the end for detached execution
+# To stop the execution, hit Ctrl+C, and then `docker compose -f docker-compose-v3-video-upload-standalone.yml down`
+# ${variable_pattern} get value from .env in the same directory
+services:
+
+  standalone_chrome:
+    image: selenium/standalone-chrome:4.43.0-20260404
+    container_name: selenium-node-20260404
+    platform: linux/amd64
+    shm_size: 2gb
+    ports:
+      - "4444:4444"
+    environment:
+      # Webdriver fails to open when we set the below passwords
+      #- SE_ROUTER_USERNAME=admin
+      #- SE_ROUTER_PASSWORD=admin
+      - SE_SUB_PATH=/selenium
+
+  chrome_video:
+    image: selenium/video:ffmpeg-8.1-20260404
+    container_name: selenium-video-20260404
+    #if not set as root, can't write videos to mapped volume due to permission issue (like dynamic grid)
+    user: root
+    volumes:
+      - ${FOLDER}:/videos
+    depends_on:
+      - standalone_chrome
+    environment:
+      #- SE_ROUTER_USERNAME=admin
+      #- SE_ROUTER_PASSWORD=admin
+      - SE_SUB_PATH=/selenium
+      - SE_VIDEO_RECORD_STANDALONE=true
+      - DISPLAY_CONTAINER_NAME=standalone_chrome
+      - SE_VIDEO_FILE_NAME=auto
+      #- SE_VIDEO_UPLOAD_ENABLED=true
+      - SE_VIDEO_UPLOAD_ENABLED=false
+      # Remote name and destination path to upload
+      #- SE_UPLOAD_DESTINATION_PREFIX=myftp://ftp/seluser
+      - SE_UPLOAD_DESTINATION_PREFIX=
+      # All configs required for RCLONE to upload to remote name myftp
+      #- RCLONE_CONFIG_MYFTP_TYPE=ftp
+      #- RCLONE_CONFIG_MYFTP_HOST=ftp_server
+      #- RCLONE_CONFIG_MYFTP_PORT=21
+      #- RCLONE_CONFIG_MYFTP_USER=seluser
+      # Password encrypted using command: rclone obscure <your_password>
+      #- RCLONE_CONFIG_MYFTP_PASS=KkK8RsUIba-MMTBUSnuYIdAKvcnFyLl2pdhQig
+      #- RCLONE_CONFIG_MYFTP_FTP_CONCURRENCY=10
+    #stop_grace_period: 30s

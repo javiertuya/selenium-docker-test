@@ -12,3 +12,8 @@ Standalone project and scripts for performance and other docker-selenium tests
     - Run workflow `test-dynamic-grid`
     - or run the individual steps in the workflow
     - Note: This can be reproduced in linux and windows
+- `test-selema`: Scripts & config to run performance tests on standalone images
+  (to migrate selema from legacy to event-driven selenium-docker)
+    - Measures the time to create and close the driver and the required video operations
+    - Run workflow `test-selema`
+    - or run the individual steps in the workflow
