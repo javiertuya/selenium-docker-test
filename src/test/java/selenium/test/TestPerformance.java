@@ -63,13 +63,23 @@ public class TestPerformance {
 
 	// Remove the video log check to determine if video is copied
 	@Test
-	public void testSelemaPreloaded() throws InterruptedException, MalformedURLException {
+	public void testSelemaPreloaded20260202() throws InterruptedException, MalformedURLException {
 		runSelemaPreloaded("20260202");
 	}
 
 	@Test
-	public void testSelemaEventDriven() throws InterruptedException, MalformedURLException {
+	public void testSelemaPreloaded20260505() throws InterruptedException, MalformedURLException {
+		runSelemaPreloaded("20260505");
+	}
+
+	@Test
+	public void testSelemaEventDriven20260404() throws InterruptedException, MalformedURLException {
 		runSelemaPreloaded("20260404");
+	}
+
+	@Test
+	public void testSelemaEventDriven20260505() throws InterruptedException, MalformedURLException {
+		runSelemaPreloaded("20260505");
 	}
 	// @Test
 	// public void testSelemaEventDrivenHubAndNode() throws InterruptedException, MalformedURLException {
@@ -83,7 +93,7 @@ public class TestPerformance {
 			String recordedVideo = videoPrefix + label + ".mp4";
 			String savedVideo = videoPrefix + label + "-" + i + ".mp4";
 
-			System.out.println("*** Dynamic Grid run: " + i);
+			System.out.println("*** Preload run: " + i);
 			long timestamp = JavaCs.currentTimeMillis();
 
 			// Before all: check if running event driven mode, video related actions will depend on this mode

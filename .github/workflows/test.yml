@@ -42,6 +42,7 @@ jobs:
           chmod u+x ./test-grid/wait-container-ready.sh
 
       - name: "Dynamic grid nightly"
+        if: always()
         run: |
           mkdir -p target/dynamic-grid-video-nightly
           sudo chown 1200:1201 target/dynamic-grid-video-nightly
@@ -54,6 +55,7 @@ jobs:
           docker compose -f test-grid/dynamic-grid-nightly.yml down
 
       - name: "Dynamic grid 20260202 (baseline: latest stable before event driven)"
+        if: always()
         run: |
           mkdir -p target/dynamic-grid-video-20260202
           sudo chown 1200:1201 target/dynamic-grid-video-20260202
@@ -65,7 +67,8 @@ jobs:
           docker logs dynamic-grid > target/dynamic-grid-log-20260202.log
           docker compose -f test-grid/dynamic-grid-20260202.yml down
 
-      - name: "Dynamic grid 20260404"
+      - name: "Dynamic grid 20260404, long time to close driver"
+        if: always()
         run: |
           mkdir -p target/dynamic-grid-video-20260404
           sudo chown 1200:1201 target/dynamic-grid-video-20260404
@@ -76,6 +79,19 @@ jobs:
           
           docker logs dynamic-grid > target/dynamic-grid-log-20260404.log
           docker compose -f test-grid/dynamic-grid-20260404.yml down
+
+      - name: "Dynamic grid 20260505, fixes the close issues"
+        if: always()
+        run: |
+          mkdir -p target/dynamic-grid-video-20260505
+          sudo chown 1200:1201 target/dynamic-grid-video-20260505
+
+          docker compose -f test-grid/dynamic-grid-20260505.yml up -d --build --quiet-pull
+          ./test-grid/wait-container-ready.sh dynamic-grid "Started Selenium Standalone"
+          mvn test -U -ntp -Dtest=**/TestPerformance#testDynamicGrid
+          
+          docker logs dynamic-grid > target/dynamic-grid-log-20260505.log
+          docker compose -f test-grid/dynamic-grid-20260505.yml down
 
       # results are in the run outputs, here upload the videos to check if they are right
       - if: always()
@@ -108,6 +124,7 @@ jobs:
           docker network create grid
 
       - name: "Preloaded 20260202 (no event driven, selema without video log check)"
+        if: always()
         run: |
           mkdir -p $PWD/target/preload-local
 
@@ -115,13 +132,30 @@ jobs:
           NODE_IMAGE=selenium/standalone-chrome:144.0-20260202 VIDEO_IMAGE=selenium/video:ffmpeg-8.0-20260202  \
             docker compose -f test-selema/docker-compose-preload.yml up -d --build --quiet-pull
 
-          mvn test -U -ntp -Dtest=**/TestPerformance#testSelemaPreloaded
+          mvn test -U -ntp -Dtest=**/TestPerformance#testSelemaPreloaded20260202
           
           docker logs selenium-node-20260202 > target/preload-local/node-20260202.log
           docker logs selenium-video-20260202 > target/preload-local/video-20260202.log
           LABEL=20260202 NETWORK=grid FOLDER=$PWD/target/preload-local \
             docker compose -f test-selema/docker-compose-preload.yml down
           mv target/preload-local target/preload-local-20260202
+
+      - name: "Preloaded 20260505 (no event driven, selema without video log check) after fixing close time issues"
+        if: always()
+        run: |
+          mkdir -p $PWD/target/preload-local
+
+          LABEL=20260505 NETWORK=grid FOLDER=$PWD/target/preload-local PORTS=4444:4444 USER=root \
+          NODE_IMAGE=selenium/standalone-chrome:144.0-20260505 VIDEO_IMAGE=selenium/video:ffmpeg-8.1-20260505  \
+            docker compose -f test-selema/docker-compose-preload.yml up -d --build --quiet-pull
+
+          mvn test -U -ntp -Dtest=**/TestPerformance#testSelemaPreloaded20260505
+          
+          docker logs selenium-node-20260505 > target/preload-local/node-20260505.log
+          docker logs selenium-video-20260505 > target/preload-local/video-20260505.log
+          LABEL=20260505 NETWORK=grid FOLDER=$PWD/target/preload-local \
+            docker compose -f test-selema/docker-compose-preload.yml down
+          mv target/preload-local target/preload-local-20260505
 
       #- name: "Customized example docker-compose-v3-video.yml (event driven, hub+node+video)"
       #  run: |
@@ -139,20 +173,39 @@ jobs:
       #      docker compose -f test-selema/docker-compose-v3-video-custom.yml down
       #    mv target/preload-local target/preload-local-20260404-ed-hn
 
-      - name: "Customized example docker-compose-v3-video-upload-standalone-custom (event driven, node+video)"
+      - name: "Customized example docker-compose-v3-video-upload-standalone-custom 20260404 (event driven, node+video)"
+        if: always()
         run: |
           mkdir -p $PWD/target/preload-local
           LABEL=20260404 FOLDER=$PWD/target/preload-local \
+          NODE_IMAGE=selenium/standalone-chrome:4.43.0-20260404 VIDEO_IMAGE=selenium/video:ffmpeg-8.1-20260404  \
           docker compose -f test-selema/docker-compose-v3-video-upload-standalone-custom.yml up -d --build --quiet-pull
           ./test-grid/wait-container-ready.sh selenium-video-20260404 "Node endpoint is responding now"
 
-          mvn test -U -ntp -Dtest=**/TestPerformance#testSelemaEventDriven
+          mvn test -U -ntp -Dtest=**/TestPerformance#testSelemaEventDriven20260404
 
           docker logs selenium-node-20260404 > target/preload-local/node-20260404-ed.log
           docker logs selenium-video-20260404 > target/preload-local/video-20260404-ed.log
           LABEL=20260404 FOLDER=$PWD/target/preload-local \
             docker compose -f test-selema/docker-compose-v3-video-upload-standalone-custom.yml down
           mv target/preload-local target/preload-local-20260404-ed
+
+      - name: "Customized example docker-compose-v3-video-upload-standalone-custom 20260505 (event driven, node+video)"
+        if: always()
+        run: |
+          mkdir -p $PWD/target/preload-local
+          LABEL=20260505 FOLDER=$PWD/target/preload-local \
+          NODE_IMAGE=selenium/standalone-chrome:4.44.0-20260505 VIDEO_IMAGE=selenium/video:ffmpeg-8.1-20260505  \
+          docker compose -f test-selema/docker-compose-v3-video-upload-standalone-custom.yml up -d --build --quiet-pull
+          ./test-grid/wait-container-ready.sh selenium-video-20260505 "Node endpoint is responding now"
+
+          mvn test -U -ntp -Dtest=**/TestPerformance#testSelemaEventDriven20260505
+
+          docker logs selenium-node-20260505 > target/preload-local/node-20260505-ed.log
+          docker logs selenium-video-20260505 > target/preload-local/video-20260505-ed.log
+          LABEL=20260505 FOLDER=$PWD/target/preload-local \
+            docker compose -f test-selema/docker-compose-v3-video-upload-standalone-custom.yml down
+          mv target/preload-local target/preload-local-20260505-ed
 
       # results are in the run outputs, here upload the videos to check if they are right
       - if: always()

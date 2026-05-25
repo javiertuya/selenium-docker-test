@@ -6,8 +6,8 @@
 services:
 
   standalone_chrome:
-    image: selenium/standalone-chrome:4.43.0-20260404
-    container_name: selenium-node-20260404
+    image: ${NODE_IMAGE:-selenium/standalone-chrome:latest}
+    container_name: selenium-node-${LABEL:?}
     platform: linux/amd64
     shm_size: 2gb
     ports:
@@ -19,8 +19,8 @@ services:
       - SE_SUB_PATH=/selenium
 
   chrome_video:
-    image: selenium/video:ffmpeg-8.1-20260404
-    container_name: selenium-video-20260404
+    image: ${VIDEO_IMAGE:-selenium/video:latest}
+    container_name: selenium-video-${LABEL:?}
     #if not set as root, can't write videos to mapped volume due to permission issue (like dynamic grid)
     user: root
     volumes:
